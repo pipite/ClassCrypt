@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2024/09/23 18:52:49.000.651,=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Project1PCH1.h</Transaction>
+    <Transaction>2024/09/23 18:52:51.000.722,=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Unit1.cpp</Transaction>
+    <Transaction>2024/09/23 18:57:42.000.769,C:\Users\berna\Documents\Embarcadero\Studio\Projets\Account\Unit1.cpp=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Unit1.cpp</Transaction>
+    <Transaction>2024/09/23 18:57:42.000.769,C:\Users\berna\Documents\Embarcadero\Studio\Projets\Account\Unit1.h=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Unit1.h</Transaction>
+    <Transaction>2024/09/23 18:57:42.000.769,C:\Users\berna\Documents\Embarcadero\Studio\Projets\Account\Unit1.dfm=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Unit1.dfm</Transaction>
+    <Transaction>2024/09/23 18:57:44.000.418,C:\Users\berna\Documents\Embarcadero\Studio\Projets\Account\Project1PCH1.h=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Project1PCH1.h</Transaction>
+    <Transaction>2024/09/23 18:57:45.000.601,C:\Users\berna\Documents\Embarcadero\Studio\Projets\Account\Project1.cbproj=C:\Users\berna\Documents\Embarcadero\Studio\Projets\Project1.cbproj</Transaction>
+    <Transaction>2025/03/23 22:50:55.000.176,C:\Local\Dev\Git\Account\TestCrypt.cbproj=C:\Local\Dev\Git\Account\Project1.cbproj</Transaction>
+    <Transaction>2025/03/23 22:50:55.000.128,C:\Local\Dev\Git\Account\TestCryptPCH1.h=C:\Local\Dev\Git\Account\Project1PCH1.h</Transaction>
+    <Transaction>2025/03/23 23:03:30.000.882,=C:\Local\Dev\Git\Account\Src\TMain.cpp</Transaction>
+    <Transaction>2025/03/28 17:33:02.000.136,=C:\Local\Dev\Git\ClassCrypt\Proj\TMain.cpp</Transaction>
+    <Transaction>2025/03/28 17:41:05.000.059,=C:\Local\Dev\Git\ClassCrypt\Src\XCrypt.cpp</Transaction>
+    <Transaction>2025/03/30 16:02:06.000.653,=C:\Local\Dev\Git\ClassCrypt\Src\XCryptRsaPwd.cpp</Transaction>
+    <Transaction>2025/03/30 16:17:17.349,=C:\Local\Dev\Git\ClassCrypt\Src\XCryptRSAPwd.cpp</Transaction>
+    <Transaction>2025/03/30 19:00:55.466,=C:\Local\Dev\Git\ClassCrypt\Src\XPassword.cpp</Transaction>
+    <Transaction>2025/03/30 19:23:46.141,=C:\Local\Dev\Git\ClassCrypt\Src\XSimpleCrypt.cpp</Transaction>
+    <Transaction>2025/03/30 19:29:34.139,C:\Local\Dev\Git\ClassCrypt\Src\XCrypt.cpp=</Transaction>
+    <Transaction>2025/03/30 19:38:44.826,=C:\Local\Dev\Git\ClassCrypt\Src\XRSAKey.cpp</Transaction>
+  </Transactions>  <ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="..\..\ClassCrypt"/>
+    <File Path="..\Src"/>
+    <File Path="..\Src\XCryptRSAPwd.cpp"/>
+    <File Path="..\Src\XCryptRSAPwd.cpp"/>
+    <File Path="..\Src\XCryptRSAPwd.h"/>
+    <File Path="..\Src\XPassword.cpp"/>
+    <File Path="..\Src\XPassword.cpp"/>
+    <File Path="..\Src\XPassword.h"/>
+    <File Path="..\Src\XSimpleCrypt.cpp"/>
+    <File Path="..\Src\XSimpleCrypt.cpp"/>
+    <File Path="..\Src\XSimpleCrypt.h"/>
+    <File Path="..\Src\XRSAKey.cpp"/>
+    <File Path="..\Src\XRSAKey.cpp"/>
+    <File Path="..\Src\XRSAKey.h"/>
+    <File Path="TestCrypt.cpp"/>
+    <File Path="TestCryptPCH1.h"/>
+    <File Path="TMain.cpp"/>
+    <File Path="TMain.cpp"/>
+    <File Path="TMain.dfm"/>
+    <File Path="TMain.h"/>
+  </ProjectSortOrder>
+</BorlandProject>
