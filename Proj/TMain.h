@@ -6,12 +6,9 @@
 #include <Vcl.StdCtrls.hpp>
 #include <Vcl.NumberBox.hpp>
 
-#include "XSimpleCrypt.h"
-//#include "XCrypt.h"
 #include "XPassword.h"
-#include "XCryptRSAPwd.h"
-#include "XRSAKey.h"
-
+#include "XAESPwd.h"
+#include "XRSAPwd.h"
 
 //---------------------------------------------------------------------------
 
@@ -23,55 +20,58 @@ __published:	// Composants gérés par l'EDI
 	TButton *Button1;
 	TEdit *Edit2;
 	TEdit *Edit3;
-	TEdit *EdEncode;
 	TLabel *Label1;
 	TLabel *Label2;
 	TMaskEdit *EdPassword;
 	TLabel *Label4;
 	TCheckBox *CBVisible;
-	TButton *BtEncrypt;
-	TEdit *EdEncrypt;
-	TButton *BtDecrypt;
-	TButton *BtDecode;
 	TButton *BtPassword;
 	TNumberBox *NumberBox1;
 	TLabel *LabelWinCrypt;
 	TButton *BtWinCryptFile;
 	TButton *BtWinDecryptFile;
 	TEdit *EdExemple;
-	TButton *BtEncode;
 	TButton *WinEncrypt;
 	TEdit *EdWinEncrypt;
 	TButton *WinDecrypt;
 	TEdit *EdFilepath;
 	TButton *BtCreateKey;
-	TButton *BtLoadRsaKey;
+	TButton *BtLoadPublicRsaKey;
 	TButton *BtExportRSAPrivateKey;
 	TButton *BtExportRSAPublicKey;
 	TLabel *LbRSAKey;
+	TLabel *Label3;
+	TLabel *Label5;
+	TLabel *Label6;
+	TButton *Button2;
+	TButton *Button3;
+	TButton *Button4;
+	TButton *Button5;
+	TButton *BtLoadPrivateRsaKey;
 	void __fastcall Button1Click(TObject *Sender);
 	void __fastcall BtWinCryptFileClick(TObject *Sender);
 	void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
 	void __fastcall CBVisibleClick(TObject *Sender);
-	void __fastcall BtEncryptClick(TObject *Sender);
-	void __fastcall BtDecryptClick(TObject *Sender);
-	void __fastcall BtDecodeClick(TObject *Sender);
 	void __fastcall BtPasswordClick(TObject *Sender);
 	void __fastcall EdPasswordChange(TObject *Sender);
 	void __fastcall BtWinDecryptFileClick(TObject *Sender);
-	void __fastcall BtEncodeClick(TObject *Sender);
 	void __fastcall WinEncryptClick(TObject *Sender);
 	void __fastcall WinDecryptClick(TObject *Sender);
 	void __fastcall BtCreateKeyClick(TObject *Sender);
 	void __fastcall BtExportRSAPrivateKeyClick(TObject *Sender);
 	void __fastcall BtExportRSAPublicKeyClick(TObject *Sender);
-	void __fastcall BtLoadRsaKeyClick(TObject *Sender);
+	void __fastcall BtLoadPublicRsaKeyClick(TObject *Sender);
+	void __fastcall BtEncryptKeyStringClick(TObject *Sender);
+	void __fastcall Button5Click(TObject *Sender);
+	void __fastcall BtLoadPrivateRsaKeyClick(TObject *Sender);
+	void __fastcall Button3Click(TObject *Sender);
+	void __fastcall Button4Click(TObject *Sender);
+	void __fastcall Button6Click(TObject *Sender);
 private:	// Déclarations utilisateur
-	XSimpleCrypt *SimpleCrypt;
 	XPassword    *GenPassword;
-//	XCrypt       *Crypt;
-	XCryptRSAPwd *CryptRSAPwd;
-	XRSAKey      *RSAKey;
+	XAESCrypt    *AESCrypt;
+	XAESPwd      *AESPwd;
+	XRSAPwd      *RSAPwd;
 
 public:		// Déclarations utilisateur
 	__fastcall TMain(TComponent* Owner);

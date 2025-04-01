@@ -4,12 +4,12 @@
 #include <sstream>
 #include <iomanip>
 #include <random>
+#include <string>
 
 #include <vcl.h>
 #include <tchar.h>
 #include <windows.h>
 #include <wincrypt.h>
-
 
 #include <System.Classes.hpp>
 #include <Vcl.Controls.hpp>

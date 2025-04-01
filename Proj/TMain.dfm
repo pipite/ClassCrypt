@@ -2,8 +2,8 @@ object Main: TMain
   Left = 0
   Top = 0
   Caption = 'Test application sous un autre compte'
-  ClientHeight = 604
-  ClientWidth = 387
+  ClientHeight = 670
+  ClientWidth = 405
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -34,18 +34,57 @@ object Main: TMain
     Caption = 'Application'
   end
   object LabelWinCrypt: TLabel
-    Left = 83
-    Top = 479
-    Width = 70
+    Left = 8
+    Top = 372
+    Width = 92
     Height = 13
-    Caption = 'LabelWinCrypt'
+    Caption = 'LabelRSAPwdCrypt'
   end
   object LbRSAKey: TLabel
-    Left = 83
-    Top = 583
+    Left = 153
+    Top = 496
     Width = 61
     Height = 13
     Caption = 'LabelRsaKey'
+  end
+  object Label3: TLabel
+    Left = 8
+    Top = 178
+    Width = 300
+    Height = 29
+    Caption = 'Cryptage AES Password AES'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label5: TLabel
+    Left = 8
+    Top = 399
+    Width = 222
+    Height = 29
+    Caption = 'RSA Assymetric Keys'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label6: TLabel
+    Left = 8
+    Top = 522
+    Width = 302
+    Height = 29
+    Caption = 'Cryptage AES Password RSA'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
   end
   object Edit1: TEdit
     Left = 80
@@ -80,20 +119,13 @@ object Main: TMain
     TabOrder = 3
     Text = 'lab.local'
   end
-  object EdEncode: TEdit
-    Left = 81
-    Top = 197
-    Width = 249
-    Height = 21
-    TabOrder = 4
-  end
   object EdPassword: TMaskEdit
     Left = 119
     Top = 139
     Width = 210
     Height = 21
     PasswordChar = '*'
-    TabOrder = 5
+    TabOrder = 4
     Text = ''
     OnChange = EdPasswordChange
   end
@@ -103,42 +135,8 @@ object Main: TMain
     Width = 97
     Height = 17
     Caption = 'Visible'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = CBVisibleClick
-  end
-  object BtEncrypt: TButton
-    Left = 81
-    Top = 224
-    Width = 121
-    Height = 25
-    Caption = 'Enccrypt Password'
-    TabOrder = 7
-    OnClick = BtEncryptClick
-  end
-  object EdEncrypt: TEdit
-    Left = 81
-    Top = 255
-    Width = 249
-    Height = 21
-    TabOrder = 8
-  end
-  object BtDecrypt: TButton
-    Left = 208
-    Top = 224
-    Width = 121
-    Height = 25
-    Caption = 'Deccrypt Password'
-    TabOrder = 9
-    OnClick = BtDecryptClick
-  end
-  object BtDecode: TButton
-    Left = 208
-    Top = 166
-    Width = 121
-    Height = 25
-    Caption = 'Decode Password'
-    TabOrder = 10
-    OnClick = BtDecodeClick
   end
   object BtPassword: TButton
     Left = 8
@@ -146,7 +144,7 @@ object Main: TMain
     Width = 66
     Height = 21
     Caption = 'Password'
-    TabOrder = 11
+    TabOrder = 6
     OnClick = BtPasswordClick
   end
   object NumberBox1: TNumberBox
@@ -156,111 +154,143 @@ object Main: TMain
     Height = 21
     MinValue = 8.000000000000000000
     MaxValue = 30.000000000000000000
-    TabOrder = 12
+    TabOrder = 7
     Value = 18.000000000000000000
   end
   object BtWinCryptFile: TButton
-    Left = 81
-    Top = 448
-    Width = 121
+    Left = 8
+    Top = 341
+    Width = 145
     Height = 25
-    Caption = 'WinCryptFile'
-    TabOrder = 13
+    Caption = 'AES Pwd Crypt File'
+    TabOrder = 8
     OnClick = BtWinCryptFileClick
   end
   object BtWinDecryptFile: TButton
-    Left = 208
-    Top = 448
-    Width = 121
+    Left = 159
+    Top = 341
+    Width = 143
     Height = 25
-    Caption = 'WinDecryptFile'
-    TabOrder = 14
+    Caption = 'AES Pwd Decrypt File'
+    TabOrder = 9
     OnClick = BtWinDecryptFileClick
   end
   object EdExemple: TEdit
-    Left = 81
-    Top = 314
-    Width = 249
+    Left = 8
+    Top = 213
+    Width = 393
     Height = 21
-    TabOrder = 15
+    TabOrder = 10
     Text = 'Ceci est une chaine '#224' crypter'
   end
-  object BtEncode: TButton
-    Left = 81
-    Top = 166
-    Width = 121
-    Height = 25
-    Caption = 'Encode Password'
-    TabOrder = 16
-    OnClick = BtEncodeClick
-  end
   object WinEncrypt: TButton
-    Left = 81
-    Top = 341
-    Width = 121
+    Left = 8
+    Top = 240
+    Width = 145
     Height = 25
-    Caption = 'WinEnccrypt String'
-    TabOrder = 17
+    Caption = 'AES Pwd Enccrypt String'
+    TabOrder = 11
     OnClick = WinEncryptClick
   end
   object EdWinEncrypt: TEdit
-    Left = 81
-    Top = 372
-    Width = 249
+    Left = 8
+    Top = 271
+    Width = 393
     Height = 21
-    TabOrder = 18
+    TabOrder = 12
   end
   object WinDecrypt: TButton
-    Left = 208
-    Top = 341
-    Width = 121
+    Left = 159
+    Top = 240
+    Width = 143
     Height = 25
-    Caption = 'WinDeccrypt String'
-    TabOrder = 19
+    Caption = 'AES Pwd Deccrypt String'
+    TabOrder = 13
     OnClick = WinDecryptClick
   end
   object EdFilepath: TEdit
-    Left = 80
-    Top = 421
-    Width = 249
+    Left = 8
+    Top = 314
+    Width = 389
     Height = 21
-    TabOrder = 20
+    TabOrder = 14
     Text = 'C:\Local\Dev\Git\ClassCrypt\Proj\Test.png'
   end
   object BtCreateKey: TButton
     Left = 8
-    Top = 521
-    Width = 153
-    Height = 25
-    Caption = 'Create RSA 2048 Key pair'
-    TabOrder = 21
+    Top = 434
+    Width = 121
+    Height = 56
+    Caption = 'Create RSA Key'
+    TabOrder = 15
     OnClick = BtCreateKeyClick
   end
-  object BtLoadRsaKey: TButton
-    Left = 8
-    Top = 552
-    Width = 153
+  object BtLoadPublicRsaKey: TButton
+    Left = 144
+    Top = 465
+    Width = 129
     Height = 25
-    Caption = 'Import RSA 2048 Key'
-    TabOrder = 22
-    OnClick = BtLoadRsaKeyClick
+    Caption = 'Import Public RSA Key'
+    TabOrder = 16
+    OnClick = BtLoadPublicRsaKeyClick
   end
   object BtExportRSAPrivateKey: TButton
-    Left = 224
-    Top = 521
-    Width = 153
+    Left = 279
+    Top = 434
+    Width = 119
     Height = 25
-    Caption = 'Export RSA Private Key'
-    TabOrder = 23
+    Caption = 'Export Private Key'
+    TabOrder = 17
     OnClick = BtExportRSAPrivateKeyClick
   end
   object BtExportRSAPublicKey: TButton
-    Left = 224
-    Top = 552
-    Width = 153
+    Left = 279
+    Top = 465
+    Width = 119
     Height = 25
-    Caption = 'Export RSA Public Key'
-    TabOrder = 24
+    Caption = 'Export Public Key'
+    TabOrder = 18
     OnClick = BtExportRSAPublicKeyClick
+  end
+  object Button2: TButton
+    Left = 25
+    Top = 600
+    Width = 75
+    Height = 25
+    Caption = 'Button2'
+    TabOrder = 19
+  end
+  object Button3: TButton
+    Left = 128
+    Top = 600
+    Width = 75
+    Height = 25
+    Caption = 'Button3'
+    TabOrder = 20
+  end
+  object Button4: TButton
+    Left = 227
+    Top = 600
+    Width = 75
+    Height = 25
+    Caption = 'Button4'
+    TabOrder = 21
+  end
+  object Button5: TButton
+    Left = 322
+    Top = 600
+    Width = 75
+    Height = 25
+    Caption = 'Button5'
+    TabOrder = 22
+  end
+  object BtLoadPrivateRsaKey: TButton
+    Left = 144
+    Top = 434
+    Width = 129
+    Height = 25
+    Caption = 'Import Private RSA Key'
+    TabOrder = 23
+    OnClick = BtLoadPrivateRsaKeyClick
   end
 end

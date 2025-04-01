@@ -176,9 +176,13 @@
             <DependentOn>TMain.h</DependentOn>
             <BuildOrder>2</BuildOrder>
         </CppCompile>
-        <CppCompile Include="..\Src\XCryptRSAPwd.cpp">
-            <DependentOn>..\Src\XCryptRSAPwd.h</DependentOn>
-            <BuildOrder>4</BuildOrder>
+        <CppCompile Include="..\Src\XAESCrypt.cpp">
+            <DependentOn>..\Src\XAESCrypt.h</DependentOn>
+            <BuildOrder>8</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\Src\XAESPwd.cpp">
+            <DependentOn>..\Src\XAESPwd.h</DependentOn>
+            <BuildOrder>7</BuildOrder>
         </CppCompile>
         <CppCompile Include="..\Src\XPassword.cpp">
             <DependentOn>..\Src\XPassword.h</DependentOn>
@@ -186,10 +190,10 @@
         </CppCompile>
         <CppCompile Include="..\Src\XRSAKey.cpp">
             <DependentOn>..\Src\XRSAKey.h</DependentOn>
-            <BuildOrder>6</BuildOrder>
+            <BuildOrder>7</BuildOrder>
         </CppCompile>
-        <CppCompile Include="..\Src\XSimpleCrypt.cpp">
-            <DependentOn>..\Src\XSimpleCrypt.h</DependentOn>
+        <CppCompile Include="..\Src\XRSAPwd.cpp">
+            <DependentOn>..\Src\XRSAPwd.h</DependentOn>
             <BuildOrder>6</BuildOrder>
         </CppCompile>
         <FormResources Include="TMain.dfm"/>

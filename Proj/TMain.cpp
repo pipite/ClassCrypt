@@ -3,6 +3,7 @@
 #pragma hdrstop
 
 #include "TMain.h"
+
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
@@ -11,18 +12,16 @@ TMain *Main;
 __fastcall TMain::TMain(TComponent* Owner)
 	: TForm(Owner)
 {
-	SimpleCrypt = new XSimpleCrypt();
 	GenPassword = new XPassword();
-	CryptRSAPwd = new XCryptRSAPwd();
-	RSAKey      = new XRSAKey();
+	AESPwd      = new XAESPwd();
+	RSAPwd      = new XRSAPwd();
 }
 
 void __fastcall TMain::FormClose(TObject *Sender, TCloseAction &Action)
 {
-	delete SimpleCrypt;
-	delete CryptRSAPwd;
 	delete GenPassword;
-	delete RSAKey;
+	delete AESPwd;
+	delete RSAPwd;
 }
 
 //---------------------------------------------------------------------------
@@ -45,54 +44,27 @@ void __fastcall TMain::CBVisibleClick(TObject *Sender)
 
 void __fastcall TMain::EdPasswordChange(TObject *Sender)
 {
-	EdEncode->Text = SimpleCrypt->Encode(EdPassword->Text);
-	EdEncrypt->Text = SimpleCrypt->Encrypt(EdPassword->Text);
-	CryptRSAPwd->SetPassword(EdPassword->Text);
+	AESPwd->SetPassword(EdPassword->Text);
 }
 
 //---------------------------------------------------------------------------
-//          XSimpleCrypt
-//---------------------------------------------------------------------------
-void __fastcall TMain::BtEncodeClick(TObject *Sender)
-{
-	EdEncode->Text = SimpleCrypt->Encode(EdPassword->Text);
-}
-
-void __fastcall TMain::BtDecodeClick(TObject *Sender)
-{
-	EdEncode->Text = SimpleCrypt->Encode(EdPassword->Text);
-	EdEncode->Text = SimpleCrypt->Encode(EdEncode->Text);
-}
-
-void __fastcall TMain::BtEncryptClick(TObject *Sender)
-{
-	EdEncrypt->Text = SimpleCrypt->Encrypt(EdPassword->Text);
-}
-
-void __fastcall TMain::BtDecryptClick(TObject *Sender)
-{
-	EdEncrypt->Text = SimpleCrypt->Encrypt(EdPassword->Text);
-	EdEncrypt->Text = SimpleCrypt->Decrypt(EdEncrypt->Text);
-}
-
-//---------------------------------------------------------------------------
-//          XCryptRSAPwd
+//          XAESPwd
 //---------------------------------------------------------------------------
 // String
 void __fastcall TMain::WinEncryptClick(TObject *Sender)
 {
-	EdWinEncrypt->Text = CryptRSAPwd->EncryptString(EdExemple->Text);
+	EdWinEncrypt->Text = AESPwd->EncryptString(EdExemple->Text);
 }
 
 void __fastcall TMain::WinDecryptClick(TObject *Sender)
 {
-	EdWinEncrypt->Text = CryptRSAPwd->DecryptString(EdWinEncrypt->Text);
+	EdWinEncrypt->Text = AESPwd->DecryptString(EdWinEncrypt->Text);
 }
 
 // File
 void __fastcall TMain::BtWinCryptFileClick(TObject *Sender)
 {
-	if ( CryptRSAPwd->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
+	if ( AESPwd->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
 		LabelWinCrypt->Caption = "Fichier Crypté.";
 	} else {
 		LabelWinCrypt->Caption = "Echec du cryptage";
@@ -101,7 +73,7 @@ void __fastcall TMain::BtWinCryptFileClick(TObject *Sender)
 
 void __fastcall TMain::BtWinDecryptFileClick(TObject *Sender)
 {
-	if ( CryptRSAPwd->DecryptFile(EdFilepath->Text + ".Crypt", EdFilepath->Text + ".Crypt.png") ) {
+	if ( AESPwd->DecryptFile(EdFilepath->Text + ".Crypt", EdFilepath->Text + ".Crypt.png") ) {
 		LabelWinCrypt->Caption = "Fichier Décrypté.";
 	} else {
 		LabelWinCrypt->Caption = "Echec du décryptage";
@@ -109,20 +81,38 @@ void __fastcall TMain::BtWinDecryptFileClick(TObject *Sender)
 }
 
 //---------------------------------------------------------------------------
-//          WinEncrypt Private / Public Key
+//          XRSAKey  Private Public Key
 //---------------------------------------------------------------------------
 void __fastcall TMain::BtCreateKeyClick(TObject *Sender)
 {
-	if ( RSAKey->GenerateKeyPair() ) {
+	if ( RSAPwd->RSAKey->GenerateKeyPair() ) {
 		LbRSAKey->Caption = "Paire de clé RSA généré.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la création de la paire de clé .RSA";
 	}
 }
 
+void __fastcall TMain::BtLoadPrivateRsaKeyClick(TObject *Sender)
+{
+	if ( RSAPwd->RSAKey->ImportKey("private.blob") ) {
+		LbRSAKey->Caption = "Clé private.blob chargé.";
+	} else {
+		LbRSAKey->Caption = "Erreur au chargement de la clé private.blob";
+	}
+}
+
+void __fastcall TMain::BtLoadPublicRsaKeyClick(TObject *Sender)
+{
+	if ( RSAPwd->RSAKey->ImportKey("public.blob") ) {
+		LbRSAKey->Caption = "Clé public.blob chargé.";
+	} else {
+		LbRSAKey->Caption = "Erreur au chargement de la clé publique.blob";
+	}
+}
+
 void __fastcall TMain::BtExportRSAPrivateKeyClick(TObject *Sender)
 {
-	if ( RSAKey->ExportPrivateKey("private.blob") ) {
+	if ( RSAPwd->RSAKey->ExportPrivateKey("private.blob") ) {
 		LbRSAKey->Caption = "Clé privé sauvegardé.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la sauvegarde de la clé privé";
@@ -131,27 +121,43 @@ void __fastcall TMain::BtExportRSAPrivateKeyClick(TObject *Sender)
 
 void __fastcall TMain::BtExportRSAPublicKeyClick(TObject *Sender)
 {
-	if ( RSAKey->ExportPublicKey("public.blob") ) {
+	if ( RSAPwd->RSAKey->ExportPublicKey("public.blob") ) {
 		LbRSAKey->Caption = "Clé public.blob sauvegardé.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la sauvegarde de la clé public.blob";
 	}
 }
 
-void __fastcall TMain::BtLoadRsaKeyClick(TObject *Sender)
+//---------------------------------------------------------------------------
+//          XCryptRSAKey
+//---------------------------------------------------------------------------
+
+void __fastcall TMain::BtEncryptKeyStringClick(TObject *Sender)
 {
-	if ( RSAKey->ImportKey("private.blob") ) {
-		LbRSAKey->Caption = "Clé private.blob chargé.";
-	} else {
-		LbRSAKey->Caption = "Erreur au chargement de la clé private.blob";
-	}
+//	EdWinEncrypt->Text = RSAKey->EncryptString(EdExemple->Text);
 }
 
-//---------------------------------------------------------------------------
-//          WinEncrypt Magasin de clé
-//---------------------------------------------------------------------------
+void __fastcall TMain::Button5Click(TObject *Sender)
+{
+//	EdWinEncrypt->Text = RSAKey->DecryptString(EdWinEncrypt->Text);
+}
 
+void __fastcall TMain::Button6Click(TObject *Sender)
+{//	if ( RSAKey->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
+//		Label6->Caption = "Fichier Crypté.";
+//	} else {
+//		Label6->Caption = "Echec du cryptage";
+//	}
+}
 
+void __fastcall TMain::Button3Click(TObject *Sender)
+{
+//	if ( RSAKey->DecryptFile(EdFilepath->Text + ".Crypt", EdFilepath->Text + ".Crypt.png") ) {
+//		Label6->Caption = "Fichier Décrypté.";
+//	} else {
+//		Label6->Caption = "Echec du décryptage";
+//	}
+}
 
 //---------------------------------------------------------------------------
 //          Run as User
@@ -213,9 +219,11 @@ void __fastcall TMain::Button1Click(TObject *Sender)
 	}
 }
 
-
+void __fastcall TMain::Button4Click(TObject *Sender)
+{
+//	RSA_AES->Show();
+}
 //---------------------------------------------------------------------------
-
 
 //---------------------------------------------------------------------------
 
