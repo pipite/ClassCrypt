@@ -3,13 +3,14 @@
 
 #include "XAESCrypt.h"
 #include "XRSAKey.h"
+#include <vector>
 
 class XRSAPwd {
 	private:
 	HCRYPTPROV    hProv;
 	HCRYPTKEY     hKey;
 	HCRYPTHASH    hHash;
-	BYTE          *buffer;
+	std::vector<BYTE> buffer;
 	UnicodeString PPassword;
 	bool          PReady;
 

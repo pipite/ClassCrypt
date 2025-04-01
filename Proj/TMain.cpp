@@ -143,7 +143,8 @@ void __fastcall TMain::Button5Click(TObject *Sender)
 }
 
 void __fastcall TMain::Button6Click(TObject *Sender)
-{//	if ( RSAKey->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
+{
+//	if ( RSAKey->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
 //		Label6->Caption = "Fichier Crypté.";
 //	} else {
 //		Label6->Caption = "Echec du cryptage";

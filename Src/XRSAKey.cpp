@@ -37,79 +37,67 @@ void __fastcall XRSAKey::ClearKey(void) {
 //---------------------------------------------------------------------------
 // Load/Save des clés
 //---------------------------------------------------------------------------
-bool __fastcall XRSAKey::LoadKeyFromFile(const std::string &filename, BYTE **buffer, DWORD &length) {
+bool __fastcall XRSAKey::LoadKeyFromFile(const std::string &filename, std::vector<BYTE> &buffer) {
 	std::ifstream file(filename, std::ios::binary | std::ios::ate);
 	if (!file.is_open()) return false;
 
-	length = file.tellg();
+	std::streamsize length = file.tellg();
 	file.seekg(0, std::ios::beg);
-	*buffer = new BYTE[length];
-	file.read(reinterpret_cast<char*>(*buffer), length);
+	
+	buffer.resize(length);
+	file.read(reinterpret_cast<char*>(buffer.data()), length);
 	file.close();
-	return true;
+
+	return IsValid(buffer);
 }
 
-bool __fastcall XRSAKey::SaveKeyToFile(const std::string &filename, BYTE *data, DWORD length) {
-	std::ofstream file(filename, std::ios::binary);
-	if (file.is_open()) {
-		file.write((char*)data, length);
-		file.close();
-		return true;
-	} else {
-		return false;
+bool __fastcall XRSAKey::SaveKeyToFile(const std::string &filename, const std::vector<BYTE> &buffer) {
+	if ( IsValid(buffer) ) {
+		std::ofstream file(filename, std::ios::binary);
+		if (file.is_open()) {
+			file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+			file.close();
+			return true;
+		} else {
+			return false;
+		}
 	}
+	return false;
 }
 
 //---------------------------------------------------------------------------
 // Verification validité des clés
 //---------------------------------------------------------------------------
-bool __fastcall XRSAKey::IsPrivateKey(BYTE* buffer, DWORD length) {
-	if (length < sizeof(BLOBHEADER)) return false;
-	BLOBHEADER* header = reinterpret_cast<BLOBHEADER*>(buffer);
+bool __fastcall XRSAKey::IsPrivateKey(const std::vector<BYTE> &buffer) {
+	if (buffer.size() < sizeof(BLOBHEADER)) return false;
+	BLOBHEADER* header = reinterpret_cast<BLOBHEADER*>(const_cast<BYTE*>(buffer.data()));
 	return (header->bType == PRIVATEKEYBLOB);  // Vérifie si c'est une clé privée
 }
 
-bool __fastcall XRSAKey::IsPublicKey(BYTE* buffer, DWORD length) {
-	if (length < sizeof(BLOBHEADER)) return false;  // Vérifie la taille minimale
-	BLOBHEADER* header = reinterpret_cast<BLOBHEADER*>(buffer);
+bool __fastcall XRSAKey::IsPublicKey(const std::vector<BYTE> &buffer) {
+	if (buffer.size() < sizeof(BLOBHEADER)) return false;  // Vérifie la taille minimale
+	BLOBHEADER* header = reinterpret_cast<BLOBHEADER*>(const_cast<BYTE*>(buffer.data()));
 	return (header->bType == PUBLICKEYBLOB);  // Vérifie si c'est une clé publique
 }
 
-bool __fastcall XRSAKey::IsValidPublicKey(void) {
-	if (hPublicKey == NULL) { // || hPublicKey == INVALID_HANDLE_VALUE) {
-		return false;
+bool __fastcall XRSAKey::IsValid(const std::vector<BYTE> &buffer) {
+	HCRYPTPROV hProv = 0;
+    HCRYPTKEY hKey = 0;
+    bool isValid = false;
+
+	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+		// CryptAcquireContext failed
+        return false;
 	}
 
-	DWORD dwBlobLen = 0;
+    // Import the key
+	if (CryptImportKey(hProv, buffer.data(), buffer.size(), 0, 0, &hKey)) {
+        isValid = true;
+		CryptDestroyKey(hKey);
+    }
 
-	// Vérification de la taille de la clé
-	DWORD dwKeySize = 0;
-	if (!CryptGetKeyParam(hPublicKey, KP_KEYLEN, (BYTE*)&dwKeySize, &dwBlobLen, 0)) {
-		return false;
-	}
-
-	// Vérification de l'algorithme
-	ALG_ID algid;
-	if (!CryptGetKeyParam(hPublicKey, KP_ALGID, (BYTE*)&algid, &dwBlobLen, 0)) {
-		return false;
-	}
-
-	// Test de chiffrement
-	const BYTE testData[] = "Test";
-	DWORD testDataLen = sizeof(testData);
-	DWORD encryptedLen = testDataLen;
-	BYTE* encryptedData = new BYTE[encryptedLen];
-
-	memcpy(encryptedData, testData, testDataLen);
-	BOOL encryptResult = CryptEncrypt(hPublicKey, 0, TRUE, 0, encryptedData, &testDataLen, encryptedLen);
-
-	delete[] encryptedData;
-
-	if (!encryptResult) {
-		return false;
-	}
-
-	return true;
+    CryptReleaseContext(hProv, 0);
+    return isValid;
 }
 
 //---------------------------------------------------------------------------
@@ -117,8 +105,8 @@ bool __fastcall XRSAKey::IsValidPublicKey(void) {
 //---------------------------------------------------------------------------
 
 bool __fastcall XRSAKey::ExtractPublicKey(void) {
-	BYTE *blob = nullptr;
-	DWORD blobLen = 0;
+	std::vector<BYTE> buffer;
+	DWORD bufferLen = 0;
 
 	DWORD provParam;
 	DWORD provParamSize = sizeof(DWORD);
@@ -134,43 +122,32 @@ bool __fastcall XRSAKey::ExtractPublicKey(void) {
 		return false;
 	}
 
-	// 1️⃣ Obtenir la taille du BLOB de la clé publique
-	if (!CryptExportKey(hPrivateKey, 0, PUBLICKEYBLOB, 0, NULL, &blobLen)) {
+	// 1 Obtenir la taille du BLOB de la clé publique
+	if (!CryptExportKey(hPrivateKey, 0, PUBLICKEYBLOB, 0, NULL, &bufferLen)) {
 		// Le provider n'est pas valide
 		return false;
 	}
 
-	// 2️⃣ Allouer un buffer en RAM pour stocker la clé publique
-	blob = new BYTE[blobLen];
+	// 2 Allouer un buffer en RAM pour stocker la clé publique
+	buffer.resize(bufferLen);
 
-	// 3️⃣ Exporter la clé publique directement en RAM
-	if (!CryptExportKey(hPrivateKey, 0, PUBLICKEYBLOB, 0, blob, &blobLen)) {
-		delete[] blob;
+	// 3 Exporter la clé publique directement en RAM
+	if (!CryptExportKey(hPrivateKey, 0, PUBLICKEYBLOB, 0, buffer.data(), &bufferLen)) {
 		return false;
 	}
 
-	// 4️⃣ Importer la clé publique directement depuis la mémoire (pas de fichier)
-	if (!CryptImportKey(hProv, blob, blobLen, 0, CRYPT_EXPORTABLE, &hPublicKey)) {
-		delete[] blob;
+	// 4 Importer la clé publique directement depuis la mémoire (pas de fichier)
+	if (!CryptImportKey(hProv, buffer.data(), bufferLen, 0, CRYPT_EXPORTABLE, &hPublicKey)) {
 		return false;
 	}
 
 	ALG_ID algid;
 	DWORD algidSize = sizeof(ALG_ID);
 	if (!CryptGetKeyParam(hPublicKey, KP_ALGID, (BYTE*)&algid, &algidSize, 0) || algid != CALG_RSA_KEYX) {
-		delete[] blob;
-		return false;
 		// La clé n'a pas le bon algorithme
+		return false;
 	}
 	PPublicReady = true;
-
-//	if (!IsValidPublicKey() ) {
-//		PPublicReady = false;
-//		return false;
-//	}
-
-	// ✅ Clé publique chargée en mémoire avec succès !
-	delete[] blob;
 	return true;
 }
 
@@ -181,19 +158,18 @@ bool __fastcall XRSAKey::ExtractPublicKey(void) {
 bool __fastcall XRSAKey::GenerateKeyPair(void) {
 	// Acquérir le contexte cryptographique
 	ClearKey();
-	
+
 	// Tenter d'acquérir un contexte cryptographique
-	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
 		// Si l'acquisition échoue, essayer de créer un nouveau conteneur
-		if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_NEWKEYSET)) {
+		if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT | CRYPT_NEWKEYSET)) {
 			return false;
 		}
 	}
 
 	// Générer une paire de clés RSA (1024 bits) exportable
-	// Note: RSA1024BIT_KEY est utilisé ici, mais pour une sécurité accrue,
-	// envisager d'utiliser 2048 bits ou plus (RSA2048BIT_KEY)
-	if (!CryptGenKey(hProv, AT_KEYEXCHANGE, RSA1024BIT_KEY | CRYPT_EXPORTABLE, &hPrivateKey)) {
+	// Note: RSA2048BIT_KEY est utilisé ici, mais pour une sécurité accrue,
+	if (!CryptGenKey(hProv, AT_KEYEXCHANGE, 0x08000000 | CRYPT_EXPORTABLE, &hPrivateKey)) {
 		DWORD lastError = GetLastError();
 		ClearKey();
 		return false;
@@ -217,29 +193,28 @@ bool __fastcall XRSAKey::GenerateKeyPair(void) {
 }
 
 bool __fastcall XRSAKey::ImportKey(const std::string &filename) {
-	BYTE *blob    = nullptr;
-	DWORD blobLen = 0;
-	bool success  = false;
+	std::vector<BYTE> blob;
+	bool success = false;
 
 	ClearKey();
 
-	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) return false;
+	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) return false;
 
-	if (!LoadKeyFromFile(filename, &blob, blobLen)) {
+	if (!LoadKeyFromFile(filename, blob)) {
 		ClearKey();
 		return false;
 	}
 
-	if (IsPublicKey(blob, blobLen)) {
-		if (CryptImportKey(hProv, blob, blobLen, 0, 0, &hPublicKey)) {
+	if (IsPublicKey(blob)) {
+		if (CryptImportKey(hProv, blob.data(), blob.size(), 0, 0, &hPublicKey)) {
 			PPublicReady = true;
 			success = true;
 		} else {
 			ClearKey();
 		}
-	} else if (IsPrivateKey(blob, blobLen)) {
+	} else if (IsPrivateKey(blob)) {
 		// Spécifier CRYPT_EXPORTABLE pour permettre l'exportation ultérieure de la clé privée
-		if (CryptImportKey(hProv, blob, blobLen, 0, CRYPT_EXPORTABLE, &hPrivateKey)) {
+		if (CryptImportKey(hProv, blob.data(), blob.size(), 0, CRYPT_EXPORTABLE, &hPrivateKey)) {
 			PPrivateReady = true;
 			if (ExtractPublicKey()) {
 				PPublicReady = true;
@@ -254,12 +229,11 @@ bool __fastcall XRSAKey::ImportKey(const std::string &filename) {
 		ClearKey();
 	}
 
-	delete[] blob;
 	return success;
 }
 
 bool __fastcall XRSAKey::ExportPrivateKey(const std::string &filename) {
-	BYTE* pbKeyBlob = nullptr;
+	std::vector<BYTE> keyBlob;
 	DWORD dwBlobLen = 0;
 	bool success = false;
 
@@ -272,20 +246,18 @@ bool __fastcall XRSAKey::ExportPrivateKey(const std::string &filename) {
 	}
 	
 	// 2. Allouer un buffer de la taille appropriée
-	pbKeyBlob = new BYTE[dwBlobLen];
+	keyBlob.resize(dwBlobLen);
 	
 	// 3. Exporter la clé privée
-	if (CryptExportKey(hPrivateKey, 0, PRIVATEKEYBLOB, 0, pbKeyBlob, &dwBlobLen)) {
-		success = SaveKeyToFile(filename, pbKeyBlob, dwBlobLen);
+	if (CryptExportKey(hPrivateKey, 0, PRIVATEKEYBLOB, 0, keyBlob.data(), &dwBlobLen)) {
+		success = SaveKeyToFile(filename, keyBlob);
 	}
 	
-	// 4. Libérer la mémoire
-	delete[] pbKeyBlob;
 	return success;
 }
 
 bool __fastcall XRSAKey::ExportPublicKey(const std::string &filename) {
-	BYTE* pbKeyBlob = nullptr;
+	std::vector<BYTE> keyBlob;
 	DWORD dwBlobLen = 0;
 	bool success = false;
 
@@ -298,15 +270,13 @@ bool __fastcall XRSAKey::ExportPublicKey(const std::string &filename) {
 	}
 	
 	// 2. Allouer un buffer de la taille appropriée
-	pbKeyBlob = new BYTE[dwBlobLen];
+	keyBlob.resize(dwBlobLen);
 	
 	// 3. Exporter la clé publique
-	if (CryptExportKey(hPublicKey, 0, PUBLICKEYBLOB, 0, pbKeyBlob, &dwBlobLen)) {
-		success = SaveKeyToFile(filename, pbKeyBlob, dwBlobLen);
+	if (CryptExportKey(hPublicKey, 0, PUBLICKEYBLOB, 0, keyBlob.data(), &dwBlobLen)) {
+		success = SaveKeyToFile(filename, keyBlob);
 	}
 	
-	// 4. Libérer la mémoire
-	delete[] pbKeyBlob;
 	return success;
 }
 

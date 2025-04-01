@@ -190,8 +190,9 @@ std::string __fastcall XAESCrypt::UnicodeToString(const UnicodeString& ustr) {
 }
 
 //---------------------------------------------------------------------------
-// Retourne une clé AES et la longueur de la clé
+// Generateur de clé AES
 //---------------------------------------------------------------------------
+// Retourne une clé AES et la longueur de la clé
 BYTE* __fastcall XAESCrypt::RandomAesIVKey(DWORD* keySize) {
 //	const DWORD AES_KEY_SIZE = 32;
 //	const DWORD AES_IV_SIZE  = 16;

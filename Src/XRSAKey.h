@@ -2,6 +2,7 @@
 #define XRSAKeyH
 
 #include "XAESCrypt.h"
+#include <vector>
 
 class XRSAKey {
 	private:
@@ -12,11 +13,11 @@ class XRSAKey {
 	bool PPublicReady;
 	bool PPrivateReady;
 
-	bool          __fastcall SaveKeyToFile(const std::string &filename, BYTE *data, DWORD length);
-	bool 		  __fastcall LoadKeyFromFile(const std::string &filename, BYTE **buffer, DWORD &length);
-	bool 		  __fastcall IsPrivateKey(BYTE* buffer, DWORD length);
-	bool 		  __fastcall IsPublicKey(BYTE* buffer, DWORD length);
-	bool          __fastcall IsValidPublicKey(void);
+	bool          __fastcall SaveKeyToFile(const std::string &filename, const std::vector<BYTE> &data);
+	bool 		  __fastcall LoadKeyFromFile(const std::string &filename, std::vector<BYTE> &buffer);
+	bool 		  __fastcall IsPrivateKey(const std::vector<BYTE> &buffer);
+	bool 		  __fastcall IsPublicKey(const std::vector<BYTE> &buffer);
+	bool          __fastcall IsValid(const std::vector<BYTE> &buffer);
 
 	public:
 				  XRSAKey(void);
