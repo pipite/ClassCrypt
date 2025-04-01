@@ -37,7 +37,7 @@ void __fastcall XAESPwd::ClearKey(void) {
 	PReady = false;
 }
 
-bool __fastcall XAESPwd::SetPassword(UnicodeString password) {
+bool __fastcall XAESPwd::SetSecurePassword(UnicodeString password) {
 	ClearKey();
 	PPassword = password;
 	std::string pwd = UStringToStdString(password);
@@ -45,13 +45,20 @@ bool __fastcall XAESPwd::SetPassword(UnicodeString password) {
 	// Acquérir un contexte cryptographique
 	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) { ClearKey(); return false; }
 
+	// Générer un sel aléatoire (128 bits)
+	BYTE salt[16];
+	if (!CryptGenRandom(hProv, sizeof(salt), salt)) return false;
+
 	// Créer un hash
 	if (!CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) { ClearKey(); return false;  }
 
-	// Ajouter le mot de passe au hash
+	// Ajouter le sel et le mot de passe au hash
+	CryptHashData(hHash, salt, sizeof(salt), 0);
+
+	// Ajouter le mot de passe au hash SHA
 	if (!CryptHashData(hHash, (BYTE*)pwd.c_str(), pwd.length(), 0)) { ClearKey(); return false; }
 
-	// Dériver une clé AES à partir du hash
+	// Dériver une clé AES à partir du hash SHA
 	if (!CryptDeriveKey(hProv, CALG_AES_256, hHash, 0, &hKey)) { ClearKey(); return false; }
 
 	PReady = true;

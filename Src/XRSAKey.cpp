@@ -22,7 +22,6 @@ std::string __fastcall XRSAKey::UnicodeToString(const UnicodeString& ustr) {
 	return std::string(ansi.c_str());
 }
 
-
 void __fastcall XRSAKey::ClearKey(void) {
 	if (hPrivateKey != NULL)  CryptDestroyKey(hPrivateKey);
 	if (hPublicKey != NULL)   CryptDestroyKey(hPublicKey);
@@ -38,27 +37,25 @@ void __fastcall XRSAKey::ClearKey(void) {
 // Load/Save des clés
 //---------------------------------------------------------------------------
 bool __fastcall XRSAKey::LoadKeyFromFile(const std::string &filename, std::vector<BYTE> &buffer) {
-	std::ifstream file(filename, std::ios::binary | std::ios::ate);
-	if (!file.is_open()) return false;
-
-	std::streamsize length = file.tellg();
-	file.seekg(0, std::ios::beg);
-	
-	buffer.resize(length);
-	file.read(reinterpret_cast<char*>(buffer.data()), length);
-	file.close();
-
-	return IsValid(buffer);
+	try {
+		UnicodeString unicodeFilename(filename.c_str());
+		buffer = FileToBuffer(unicodeFilename);
+		return IsValid(buffer);
+	}
+	catch (const std::exception&) {
+		// En cas d'erreur (fichier inexistant, etc.)
+		return false;
+	}
 }
 
 bool __fastcall XRSAKey::SaveKeyToFile(const std::string &filename, const std::vector<BYTE> &buffer) {
-	if ( IsValid(buffer) ) {
-		std::ofstream file(filename, std::ios::binary);
-		if (file.is_open()) {
-			file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-			file.close();
-			return true;
-		} else {
+	if (IsValid(buffer)) {
+		try {
+			UnicodeString unicodeFilename(filename.c_str());
+			return BufferToFile(buffer, unicodeFilename);
+		}
+		catch (const std::exception&) {
+			// En cas d'erreur (problème d'écriture, etc.)
 			return false;
 		}
 	}
@@ -281,28 +278,105 @@ bool __fastcall XRSAKey::ExportPublicKey(const std::string &filename) {
 }
 
 //---------------------------------------------------------------------------
-// Cryptage / Decryptage String RSA
+// Crypte / Decrype String RSA-AES
 //---------------------------------------------------------------------------
 UnicodeString __fastcall XRSAKey::EncryptString(const UnicodeString& str) {
-//	if (PPublicReady) return RSACrypt->EncryptString(str,hPublicKey);
-//	return L"Pas de clé publique disponible";
+	if (PPublicReady) {
+		try {
+			return AESCrypt->EncryptString(str, hPublicKey);
+		}
+		catch (const std::exception& e) {
+			return UnicodeString(L"Erreur: ") + UnicodeString(e.what());
+		}
+	}
+	return L"Pas de clé publique disponible";
 }
 
 UnicodeString __fastcall XRSAKey::DecryptString(const UnicodeString& hexstr) {
-//	if (PPrivateReady) return RSACrypt->DecryptString(hexstr,hPrivateKey);
-//	return L"Pas de clé privée disponible";
+	if (PPrivateReady) {
+		try {
+			return AESCrypt->DecryptString(hexstr, hPrivateKey);
+		}
+		catch (const std::exception& e) {
+			return UnicodeString(L"Erreur: ") + UnicodeString(e.what());
+		}
+	}
+	return L"Pas de clé privée disponible";
 }
 
 //---------------------------------------------------------------------------
-// Crypte / Decrypte une un fichier
+// Crypte / Decrypte une un fichier RSA-AES
 //---------------------------------------------------------------------------
 bool __fastcall XRSAKey::EncryptFile(const UnicodeString& infile, const UnicodeString& outfile) {
-//	if (PPublicReady) return RSACrypt->EncryptFile(infile,outfile,hPrivateKey);
-//	return false;
+	bool success = false;
+
+	if (!PPublicReady) return false;
+	HCRYPTKEY hAesKey = NULL;
+
+    try {
+        // 1. Lire le fichier à chiffrer
+		std::vector<BYTE> fileData = FileToBuffer(infile);
+
+        // 2. Générer une clé AES aléatoire
+		AESCrypt->NewRandomAesKey(hProv,hAesKey);
+
+        // 3. Chiffrer les données avec AES
+		std::vector<BYTE> crypteddata = AESCrypt->EncryptBuffer(fileData, hAesKey);
+
+		// 4. Exporter la clé AES, en extraire le buffer, et la chiffrer avec RSA
+		std::vector<BYTE> aesKeyBlob = AESCrypt->ExportAesKey(hAesKey);
+		std::vector<BYTE> encryptedKeyBlob = AESCrypt->EncryptBuffer(aesKeyBlob, hPublicKey);
+
+		// 5. Combiner la clé AES chiffrée et les données chiffrées dans crypteddata
+		AddAESKeyToData(crypteddata, encryptedKeyBlob);
+
+		// 6. Écrire crypteddata combiné dans le fichier de sortie
+		if (!BufferToFile(crypteddata, outfile)) {
+			throw std::runtime_error("Impossible d'écrire les données combiné dans le fichier de sortie");
+		}
+		success = true;
+    }
+	catch (const std::exception& e) { }
+	if ( hAesKey != NULL) CryptDestroyKey(hAesKey);
+	if ( hProv  != NULL ) CryptReleaseContext(hProv, 0);
+	return success;
 }
 
 bool __fastcall XRSAKey::DecryptFile(const UnicodeString& infile, const UnicodeString& outfile) {
-//	if (PPrivateReady) return RSACrypt->DecryptFile(infile,outfile,hPrivateKey);
-//	return false;
-}
+	bool success = false;
+	if (!PPrivateReady) return false;
 
+	HCRYPTPROV hProv   = NULL;
+	HCRYPTKEY  hAesKey = NULL;
+
+	try {
+		// Lire le fichier chiffré
+		std::vector<BYTE> cryptedblob = FileToBuffer(infile);
+
+		// Extraire la clé AES chiffrée et modifier cryptedbuffer pour qu'il ne contienne plus que les données chiffrées
+		std::vector<BYTE> cryptedkeyblob = ExtractAESKey(cryptedblob);
+
+		// Déchiffrer la clé AES avec la clé privée RSA
+		std::vector<BYTE> keyblob = AESCrypt->DecryptBuffer(cryptedkeyblob, hPrivateKey);
+
+		// Importer la clé AES
+		if ( !AESCrypt->ImportAesKey(hProv, hAesKey, keyblob) ) {
+			throw std::runtime_error("Impossible d'd'importer la clé AES");
+        }
+
+		// Déchiffrer les données avec AES
+		std::vector<BYTE> data = AESCrypt->DecryptBuffer(cryptedblob, hAesKey);
+
+		// Écrire les données déchiffrées dans le fichier de sortie
+		if (!BufferToFile(data, outfile)) {
+			throw std::runtime_error("Impossible d'écrire les données déchiffrées dans le fichier de sortie");
+		}
+
+		if (hAesKey != NULL) CryptDestroyKey(hAesKey);
+		success = true;
+	}
+	catch (const std::exception& e) { }
+	if ( hAesKey != NULL)  CryptDestroyKey(hAesKey);
+	if ( hProv   != NULL ) CryptReleaseContext(hProv, 0);
+	return success;
+}

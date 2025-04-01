@@ -7,12 +7,12 @@
 
 class XRSAPwd {
 	private:
-	HCRYPTPROV    hProv;
-	HCRYPTKEY     hKey;
-	HCRYPTHASH    hHash;
+	HCRYPTPROV        hProv;
+	HCRYPTKEY         hKey;
+	HCRYPTHASH        hHash;
 	std::vector<BYTE> buffer;
-	UnicodeString PPassword;
-	bool          PReady;
+	UnicodeString     PPassword;
+	bool              PReady;
 
 	std::string   __fastcall UnicodeToString(const UnicodeString& ustr);
 

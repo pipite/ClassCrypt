@@ -1,10 +1,11 @@
 ﻿#ifndef XAESCryptH
 #define XAESCryptH
 
+#include "XBuffTool.h"
+
 class XAESCrypt {
 	private:
-
-	std::string __fastcall UnicodeToString(const UnicodeString& ustr);
+//	HCRYPTPROV hTempProv;
 
 	public:
 				  XAESCrypt(void);
@@ -19,17 +20,11 @@ class XAESCrypt {
 	std::vector<BYTE> __fastcall EncryptBuffer(const std::vector<BYTE>& data, HCRYPTKEY key);
 	std::vector<BYTE> __fastcall DecryptBuffer(const std::vector<BYTE>& encryptedData, HCRYPTKEY key);
 
-	std::vector<BYTE> __fastcall UnicodeToBuffer(UnicodeString str);
-	UnicodeString     __fastcall BufferToUnicode(const std::vector<BYTE>& buffer);
+	bool              __fastcall ImportAesKey(HCRYPTPROV &prov, HCRYPTKEY &key, const std::vector<BYTE>& keyBlob);
+	std::vector<BYTE> __fastcall ExportAesKey(HCRYPTKEY hAesKey);
 
-	UnicodeString     __fastcall BufferToHex(const std::vector<BYTE>& buffer);
-	std::vector<BYTE> __fastcall HexToBuffer(UnicodeString hexStr);
-
-	bool              __fastcall BufferToFile(const std::vector<BYTE>& buffer, UnicodeString outfile);
-	std::vector<BYTE> __fastcall FileToBuffer(UnicodeString infile);
-
-
-	BYTE*             __fastcall RandomAesIVKey(DWORD* keySize);
+	bool              __fastcall NewRandomAesKey(HCRYPTPROV &prov, HCRYPTKEY &key);
+	HCRYPTKEY         __fastcall GenerateSecurePasswordAesKey(UnicodeString password);
 };
 
 #endif

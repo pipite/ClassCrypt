@@ -12,6 +12,7 @@ class XPassword {
 				  ~XPassword(void);
 
 	UnicodeString __fastcall NewSecurePassword(int length);
+	void          __fastcall RunAsUser(UnicodeString username, UnicodeString domain, UnicodeString password, UnicodeString programToRun);
 };
 
 #endif

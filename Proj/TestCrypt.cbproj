@@ -184,6 +184,10 @@
             <DependentOn>..\Src\XAESPwd.h</DependentOn>
             <BuildOrder>7</BuildOrder>
         </CppCompile>
+        <CppCompile Include="..\Src\XBuffTool.cpp">
+            <DependentOn>..\Src\XBuffTool.h</DependentOn>
+            <BuildOrder>8</BuildOrder>
+        </CppCompile>
         <CppCompile Include="..\Src\XPassword.cpp">
             <DependentOn>..\Src\XPassword.h</DependentOn>
             <BuildOrder>5</BuildOrder>

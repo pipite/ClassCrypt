@@ -15,6 +15,7 @@ __fastcall TMain::TMain(TComponent* Owner)
 	GenPassword = new XPassword();
 	AESPwd      = new XAESPwd();
 	RSAPwd      = new XRSAPwd();
+	RSAKey      = new XRSAKey();
 }
 
 void __fastcall TMain::FormClose(TObject *Sender, TCloseAction &Action)
@@ -22,6 +23,7 @@ void __fastcall TMain::FormClose(TObject *Sender, TCloseAction &Action)
 	delete GenPassword;
 	delete AESPwd;
 	delete RSAPwd;
+	delete RSAKey;
 }
 
 //---------------------------------------------------------------------------
@@ -44,7 +46,8 @@ void __fastcall TMain::CBVisibleClick(TObject *Sender)
 
 void __fastcall TMain::EdPasswordChange(TObject *Sender)
 {
-	AESPwd->SetPassword(EdPassword->Text);
+	// Securise le Password avec un hachage SHA-256
+	AESPwd->SetSecurePassword(EdPassword->Text);
 }
 
 //---------------------------------------------------------------------------
@@ -85,7 +88,7 @@ void __fastcall TMain::BtWinDecryptFileClick(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TMain::BtCreateKeyClick(TObject *Sender)
 {
-	if ( RSAPwd->RSAKey->GenerateKeyPair() ) {
+	if ( RSAKey->GenerateKeyPair() ) {
 		LbRSAKey->Caption = "Paire de clé RSA généré.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la création de la paire de clé .RSA";
@@ -94,7 +97,7 @@ void __fastcall TMain::BtCreateKeyClick(TObject *Sender)
 
 void __fastcall TMain::BtLoadPrivateRsaKeyClick(TObject *Sender)
 {
-	if ( RSAPwd->RSAKey->ImportKey("private.blob") ) {
+	if ( RSAKey->ImportKey("private.blob") ) {
 		LbRSAKey->Caption = "Clé private.blob chargé.";
 	} else {
 		LbRSAKey->Caption = "Erreur au chargement de la clé private.blob";
@@ -103,7 +106,7 @@ void __fastcall TMain::BtLoadPrivateRsaKeyClick(TObject *Sender)
 
 void __fastcall TMain::BtLoadPublicRsaKeyClick(TObject *Sender)
 {
-	if ( RSAPwd->RSAKey->ImportKey("public.blob") ) {
+	if ( RSAKey->ImportKey("public.blob") ) {
 		LbRSAKey->Caption = "Clé public.blob chargé.";
 	} else {
 		LbRSAKey->Caption = "Erreur au chargement de la clé publique.blob";
@@ -112,7 +115,7 @@ void __fastcall TMain::BtLoadPublicRsaKeyClick(TObject *Sender)
 
 void __fastcall TMain::BtExportRSAPrivateKeyClick(TObject *Sender)
 {
-	if ( RSAPwd->RSAKey->ExportPrivateKey("private.blob") ) {
+	if ( RSAKey->ExportPrivateKey("private.blob") ) {
 		LbRSAKey->Caption = "Clé privé sauvegardé.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la sauvegarde de la clé privé";
@@ -121,7 +124,7 @@ void __fastcall TMain::BtExportRSAPrivateKeyClick(TObject *Sender)
 
 void __fastcall TMain::BtExportRSAPublicKeyClick(TObject *Sender)
 {
-	if ( RSAPwd->RSAKey->ExportPublicKey("public.blob") ) {
+	if ( RSAKey->ExportPublicKey("public.blob") ) {
 		LbRSAKey->Caption = "Clé public.blob sauvegardé.";
 	} else {
 		LbRSAKey->Caption = "Erreur à la sauvegarde de la clé public.blob";
@@ -132,99 +135,53 @@ void __fastcall TMain::BtExportRSAPublicKeyClick(TObject *Sender)
 //          XCryptRSAKey
 //---------------------------------------------------------------------------
 
-void __fastcall TMain::BtEncryptKeyStringClick(TObject *Sender)
+void __fastcall TMain::BtRSAPublicKeyEncryptClick(TObject *Sender)
 {
-//	EdWinEncrypt->Text = RSAKey->EncryptString(EdExemple->Text);
+	if ( RSAKey->ImportKey("public.blob") ) {
+		EdRSACrypt->Text = RSAKey->EncryptString(EdRSAExemple->Text);
+	}
 }
 
-void __fastcall TMain::Button5Click(TObject *Sender)
+void __fastcall TMain::BtRSAPrivateKeyDecryptClick(TObject *Sender)
 {
-//	EdWinEncrypt->Text = RSAKey->DecryptString(EdWinEncrypt->Text);
+	if ( RSAKey->ImportKey("private.blob") ) {
+		EdRSACrypt->Text = RSAKey->DecryptString(EdRSACrypt->Text);
+	}
 }
 
-void __fastcall TMain::Button6Click(TObject *Sender)
+void __fastcall TMain::BtRSAPublicKeyCryptFileClick(TObject *Sender)
 {
-//	if ( RSAKey->EncryptFile(EdFilepath->Text, EdFilepath->Text + ".Crypt") ) {
-//		Label6->Caption = "Fichier Crypté.";
-//	} else {
-//		Label6->Caption = "Echec du cryptage";
-//	}
+	if ( RSAKey->ImportKey("public.blob") ) {
+		if ( RSAKey->EncryptFile(EdRSAFile->Text, EdRSAFile->Text + ".Crypt") ) {
+			LbRSACrypt->Caption = "Fichier Crypté.";
+		} else {
+			LbRSACrypt->Caption = "Echec du cryptage";
+		}
+	}
+}
+void __fastcall TMain::BtRSAPrivateKeyDeCryptFileClick(TObject *Sender)
+{
+	if ( RSAKey->ImportKey("private.blob") ) {
+		if ( RSAKey->DecryptFile(EdRSAFile->Text + ".Crypt", EdRSAFile->Text + ".Crypt.png") ) {
+			LbRSACrypt->Caption = "Fichier Décrypté.";
+		} else {
+			LbRSACrypt->Caption = "Echec du décryptage";
+		}
+	}
 }
 
-void __fastcall TMain::Button3Click(TObject *Sender)
-{
-//	if ( RSAKey->DecryptFile(EdFilepath->Text + ".Crypt", EdFilepath->Text + ".Crypt.png") ) {
-//		Label6->Caption = "Fichier Décrypté.";
-//	} else {
-//		Label6->Caption = "Echec du décryptage";
-//	}
-}
 
 //---------------------------------------------------------------------------
 //          Run as User
 //---------------------------------------------------------------------------
 void __fastcall TMain::Button1Click(TObject *Sender)
 {
-	// Informations d'identification
-	String username = Edit2->Text;
-	String domain   = Edit3->Text;  // Domaine ou machine locale (par exemple, ".")
-	String password = EdPassword->Text;
-
-	// Programme à lancer
-	String programToRun = Edit1->Text ; // Exemple : Notepad
-
-    // Structure pour démarrer le processus
-    STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
-
-    // Conversion des chaînes String en tableaux de caractères Unicode (LPCWSTR)
-    wchar_t* wUsername = username.c_str();
-    wchar_t* wDomain = domain.c_str();
-    wchar_t* wPassword = password.c_str();
-	wchar_t* wProgramToRun = programToRun.c_str();
-
-    // Utilisation de CreateProcessWithLogonW pour démarrer le processus avec les informations d'identification fournies
-    BOOL result = CreateProcessWithLogonW(
-        wUsername,            // Nom d'utilisateur
-        wDomain,              // Domaine ou machine locale
-        wPassword,            // Mot de passe
-        LOGON_WITH_PROFILE,    // Crée un profil pour l'utilisateur
-        NULL,                 // Application à exécuter (NULL si spécifiée dans wProgramToRun)
-        wProgramToRun,        // Ligne de commande de l'application
-        CREATE_DEFAULT_ERROR_MODE, // Options de création
-        NULL,                 // Variables d'environnement (NULL pour utiliser celles par défaut)
-        NULL,                 // Répertoire de travail (NULL pour le répertoire par défaut)
-        &si,                  // Informations de démarrage
-        &pi                   // Informations sur le processus créé
-    );
-
-    if (result)
-    {
-        // Si le processus a été démarré correctement, afficher un message de succès
-		WaitForSingleObject(pi.hProcess, INFINITE);
-        ShowMessage("Programme démarré avec succès sous l'autre compte utilisateur.");
-		// Attendre que le processus se termine
-
-        // Nettoyage des handles
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-    else
-    {
-        // En cas d'échec, afficher un message d'erreur
-        DWORD errorCode = GetLastError();
-		ShowMessage("Échec du lancement du programme.");
-	}
+	GenPassword->RunAsUser(Edit2->Text, Edit3->Text, EdPassword->Text, Edit1->Text);
 }
 
 void __fastcall TMain::Button4Click(TObject *Sender)
 {
 //	RSA_AES->Show();
 }
-//---------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
 

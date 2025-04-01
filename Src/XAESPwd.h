@@ -19,7 +19,7 @@ class XAESPwd {
 				  XAESPwd(void);
 				  ~XAESPwd(void);
 
-	bool 		  __fastcall SetPassword(UnicodeString password);
+	bool 		  __fastcall SetSecurePassword(UnicodeString password);
 	void 		  __fastcall ClearKey(void);
 
 	UnicodeString __fastcall EncryptString(UnicodeString str);

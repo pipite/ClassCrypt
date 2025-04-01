@@ -66,3 +66,56 @@ UnicodeString __fastcall XPassword::NewSecurePassword(int length) {
 	Password = Shuffle(password);
 	return Password;
 }
+
+//---------------------------------------------------------------------------
+//          Run as User
+//---------------------------------------------------------------------------
+void __fastcall XPassword::RunAsUser(UnicodeString username, UnicodeString domain, UnicodeString password, UnicodeString programToRun)
+{
+	// Structure pour démarrer le processus
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	// Conversion des chaînes String en tableaux de caractères Unicode (LPCWSTR)
+	wchar_t* wUsername = username.c_str();
+	wchar_t* wDomain = domain.c_str();
+	wchar_t* wPassword = password.c_str();
+	wchar_t* wProgramToRun = programToRun.c_str();
+
+	// Utilisation de CreateProcessWithLogonW pour démarrer le processus avec les informations d'identification fournies
+	BOOL result = CreateProcessWithLogonW(
+		wUsername,            // Nom d'utilisateur
+		wDomain,              // Domaine ou machine locale
+		wPassword,            // Mot de passe
+		LOGON_WITH_PROFILE,    // Crée un profil pour l'utilisateur
+		NULL,                 // Application à exécuter (NULL si spécifiée dans wProgramToRun)
+		wProgramToRun,        // Ligne de commande de l'application
+		CREATE_DEFAULT_ERROR_MODE, // Options de création
+		NULL,                 // Variables d'environnement (NULL pour utiliser celles par défaut)
+		NULL,                 // Répertoire de travail (NULL pour le répertoire par défaut)
+		&si,                  // Informations de démarrage
+		&pi                   // Informations sur le processus créé
+	);
+
+	if (result)
+	{
+		// Si le processus a été démarré correctement, afficher un message de succès
+		WaitForSingleObject(pi.hProcess, INFINITE);
+        ShowMessage("Programme démarré avec succès sous l'autre compte utilisateur.");
+		// Attendre que le processus se termine
+
+        // Nettoyage des handles
+        CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+    }
+    else
+    {
+		// En cas d'échec, afficher un message d'erreur
+        DWORD errorCode = GetLastError();
+		ShowMessage("Échec du lancement du programme.");
+	}
+}
+

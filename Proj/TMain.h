@@ -43,11 +43,23 @@ __published:	// Composants gérés par l'EDI
 	TLabel *Label3;
 	TLabel *Label5;
 	TLabel *Label6;
+	TButton *BtRSAPublicKeyEncrypt;
+	TButton *BtRSAPrivateKeyDecrypt;
+	TButton *BtRSAPublicKeyCryptFile;
+	TButton *BtRSAPrivateKeyDeCryptFile;
+	TButton *BtLoadPrivateRsaKey;
+	TEdit *EdRSACrypt;
+	TEdit *EdRSAExemple;
+	TEdit *EdRSAFile;
+	TLabel *LbRSACrypt;
 	TButton *Button2;
 	TButton *Button3;
+	TEdit *Edit4;
+	TEdit *Edit5;
 	TButton *Button4;
 	TButton *Button5;
-	TButton *BtLoadPrivateRsaKey;
+	TLabel *Label7;
+	TEdit *Edit6;
 	void __fastcall Button1Click(TObject *Sender);
 	void __fastcall BtWinCryptFileClick(TObject *Sender);
 	void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
@@ -61,17 +73,18 @@ __published:	// Composants gérés par l'EDI
 	void __fastcall BtExportRSAPrivateKeyClick(TObject *Sender);
 	void __fastcall BtExportRSAPublicKeyClick(TObject *Sender);
 	void __fastcall BtLoadPublicRsaKeyClick(TObject *Sender);
-	void __fastcall BtEncryptKeyStringClick(TObject *Sender);
-	void __fastcall Button5Click(TObject *Sender);
 	void __fastcall BtLoadPrivateRsaKeyClick(TObject *Sender);
-	void __fastcall Button3Click(TObject *Sender);
 	void __fastcall Button4Click(TObject *Sender);
-	void __fastcall Button6Click(TObject *Sender);
+	void __fastcall BtRSAPublicKeyEncryptClick(TObject *Sender);
+	void __fastcall BtRSAPrivateKeyDecryptClick(TObject *Sender);
+	void __fastcall BtRSAPublicKeyCryptFileClick(TObject *Sender);
+	void __fastcall BtRSAPrivateKeyDeCryptFileClick(TObject *Sender);
 private:	// Déclarations utilisateur
 	XPassword    *GenPassword;
 	XAESCrypt    *AESCrypt;
 	XAESPwd      *AESPwd;
 	XRSAPwd      *RSAPwd;
+	XRSAKey      *RSAKey;
 
 public:		// Déclarations utilisateur
 	__fastcall TMain(TComponent* Owner);

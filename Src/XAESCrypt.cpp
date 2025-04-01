@@ -4,9 +4,11 @@
 #include "XAESCrypt.h"
 
 XAESCrypt::XAESCrypt(void) {
+//	HCRYPTPROV hTempProv = NULL;
 }
 
 XAESCrypt::~XAESCrypt(void) {
+//	if ( hTempProv != NULL ) CryptReleaseContext(hTempProv, 0);
 }
 
 //---------------------------------------------------------------------------
@@ -27,8 +29,8 @@ UnicodeString __fastcall XAESCrypt::DecryptString(UnicodeString str, HCRYPTKEY k
     try {
 		std::vector<BYTE> buff = HexToBuffer(str);
         std::vector<BYTE> decryptedBuffer = DecryptBuffer(buff, key);
-        return BufferToUnicode(decryptedBuffer);
-    }
+		return BufferToUnicode(decryptedBuffer);
+	}
     catch (const std::exception& e) {
 		return UnicodeString(L"Erreur: ") + UnicodeString(e.what());
     }
@@ -43,7 +45,7 @@ bool __fastcall XAESCrypt::EncryptFile(UnicodeString infile, UnicodeString outfi
 		std::vector<BYTE> encryptedData = EncryptBuffer(fileBuffer, key);
 		return BufferToFile(encryptedData, outfile);
     } catch (const std::exception& e) {
-		std::cerr << "Erreur: " << e.what() << std::endl;
+		//std::cerr << "Erreur: " << e.what() << std::endl;
         return false;
     }
 }
@@ -54,7 +56,7 @@ bool __fastcall XAESCrypt::DecryptFile(UnicodeString infile, UnicodeString outfi
 		std::vector<BYTE> decryptedData = DecryptBuffer(fileBuffer, key);
 		return BufferToFile(decryptedData, outfile);
     } catch (const std::exception& e) {
-		std::cerr << "Erreur: " << e.what() << std::endl;
+		//std::cerr << "Erreur: " << e.what() << std::endl;
         return false;
     }
 }
@@ -110,107 +112,134 @@ std::vector<BYTE> __fastcall XAESCrypt::DecryptBuffer(const std::vector<BYTE>& e
 }
 
 //---------------------------------------------------------------------------
-// Buffer <> Unicode
+// Import / Export Key WinCrypt HCRYPTKEY <> vector<BYTE>
 //---------------------------------------------------------------------------
-UnicodeString __fastcall XAESCrypt::BufferToUnicode(const std::vector<BYTE>& buffer) {
-	std::string str(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-	size_t nullPos = str.find('\0');
-	if (nullPos != std::string::npos) str = str.substr(0, nullPos);
-	return UnicodeString(str.c_str());
+// Exporte une clé AES HCRYPTKEY en vector<BYTE>
+std::vector<BYTE> __fastcall XAESCrypt::ExportAesKey(HCRYPTKEY hAesKey) {
+    if (hAesKey == NULL) {
+        throw std::runtime_error("Clé AES invalide");
+    }
+
+    // Obtenir la taille nécessaire pour le blob de la clé
+    DWORD keyBlobLen = 0;
+    if (!CryptExportKey(hAesKey, 0, PLAINTEXTKEYBLOB, 0, NULL, &keyBlobLen)) {
+        throw std::runtime_error("Impossible de déterminer la taille de la clé AES: " + std::to_string(GetLastError()));
+    }
+
+    // Allouer un buffer pour la clé
+    std::vector<BYTE> keyBlob(keyBlobLen);
+
+	// Exporter la clé
+    if (!CryptExportKey(hAesKey, 0, PLAINTEXTKEYBLOB, 0, keyBlob.data(), &keyBlobLen)) {
+        throw std::runtime_error("Impossible d'exporter la clé AES: " + std::to_string(GetLastError()));
+	}
+
+	return keyBlob;
 }
 
-std::vector<BYTE> __fastcall XAESCrypt::UnicodeToBuffer(UnicodeString str) {
-    std::string data = UnicodeToString(str);
-    return std::vector<BYTE>(data.begin(), data.end());
-}
+// Exporte une clé AES depuis un vecteur d'octets
+bool __fastcall XAESCrypt::ImportAesKey(HCRYPTPROV &prov, HCRYPTKEY &key, const std::vector<BYTE>& keyBlob) {
+	bool success = false;
+	// Acquérir un contexte cryptographique pour AES
+	if ( prov == NULL ) {
+		if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) return false;
+	}
 
-//---------------------------------------------------------------------------
-// Buffer <> File
-//---------------------------------------------------------------------------
-bool __fastcall XAESCrypt::BufferToFile(const std::vector<BYTE>& buffer, UnicodeString outfile) {
-	std::string outputFile = UnicodeToString(outfile);
-	std::ofstream outFile(outputFile, std::ios::binary);
-	if (!outFile) return false;
-	outFile.write((char*)buffer.data(), buffer.size());
+	// Importer la clé AES
+	if (!CryptImportKey(prov, keyBlob.data(), keyBlob.size(), 0, 0, &key)) return false;
+
 	return true;
 }
 
-std::vector<BYTE> __fastcall XAESCrypt::FileToBuffer(UnicodeString infile) {
-	std::string inputFile = UnicodeToString(infile);
-	std::ifstream inFile(inputFile, std::ios::binary);
-
-	if (!inFile) throw std::runtime_error("Impossible d'ouvrir le fichier d'entrée");
-
-	inFile.seekg(0, std::ios::end);
-	std::streamsize fileSize = inFile.tellg();
-	inFile.seekg(0, std::ios::beg);
-
-	if (fileSize == 0) return {};
-
-	std::vector<BYTE> buffer(fileSize);
-	inFile.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-
-	return buffer;
-}
-
 //---------------------------------------------------------------------------
-// Buffer <> Hexa Unicode
+// Generateur de clé AES HCRYPTKEY
 //---------------------------------------------------------------------------
-
-UnicodeString __fastcall XAESCrypt::BufferToHex(const std::vector<BYTE>& buffer) {
-	UnicodeString hexString;
-	for (BYTE byte : buffer) {
-		wchar_t hex[3];
-		swprintf(hex, 3, L"%02X", byte);
-		hexString += UnicodeString(hex);
+// Génère une clé AES
+bool __fastcall XAESCrypt::NewRandomAesKey(HCRYPTPROV &prov, HCRYPTKEY &key) {
+	// Acquérir un contexte cryptographique pour AES
+	if ( prov == NULL ) {
+		if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) return false;
 	}
-	return hexString;
+
+	// Générer une clé AES-256 aléatoire
+	if (!CryptGenKey(prov, CALG_AES_256, CRYPT_EXPORTABLE, &key)) return false;
+	return true;
 }
 
-std::vector<BYTE> __fastcall XAESCrypt::HexToBuffer(UnicodeString hexStr) {
-	std::vector<BYTE> buffer;
-	int len = hexStr.Length();
 
-	if (len % 2 != 0) throw std::runtime_error("Erreur: Chaîne hexadécimale invalide");
-    for (int i = 1; i <= len; i += 2) {
-		wchar_t hexByte[3] = { hexStr[i], hexStr[i+1], 0 };
-        int value;
-        swscanf(hexByte, L"%x", &value);
-		buffer.push_back((BYTE)value);
+
+
+
+
+/*
+
+bool GenerateAESKey(const std::string& pwd, HCRYPTPROV& hProv, HCRYPTKEY& hKey, BYTE* salt) {
+	// Acquérir un contexte cryptographique
+	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+		return false;
 	}
-    return buffer;
+
+	// Générer un sel aléatoire (128 bits)
+	if (!CryptGenRandom(hProv, 16, salt)) {
+		return false;
+	}
+
+	// Créer un hash SHA-256
+	HCRYPTHASH hHash;
+	if (!CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
+		return false;
+	}
+
+	// Ajouter le sel au hash
+	if (!CryptHashData(hHash, salt, 16, 0)) {
+		CryptDestroyHash(hHash);
+		return false;
+	}
+
+	// Ajouter le mot de passe au hash SHA
+	if (!CryptHashData(hHash, (BYTE*)pwd.c_str(), pwd.length(), 0)) {
+		CryptDestroyHash(hHash);
+		return false;
+	}
+
+	// Dériver une clé AES à partir du hash SHA
+	if (!CryptDeriveKey(hProv, CALG_AES_256, hHash, 0, &hKey)) {
+		CryptDestroyHash(hHash);
+		return false;
+	}
+
+	CryptDestroyHash(hHash);
+	return true;
 }
 
-//---------------------------------------------------------------------------
-// Conversion Unicode -> String
-//---------------------------------------------------------------------------
-std::string __fastcall XAESCrypt::UnicodeToString(const UnicodeString& ustr) {
-	AnsiString ansi(ustr);
-	return std::string(ansi.c_str());
+bool DecryptAES(const std::string& pwd, BYTE* encryptedData, DWORD encryptedSize, BYTE*& decryptedData, DWORD& decryptedSize) {
+	HCRYPTPROV hProv;
+	HCRYPTKEY hKey;
+	BYTE salt[16];
+
+	// Récupérer le sel depuis les 16 premiers octets du fichier chiffré
+	memcpy(salt, encryptedData, 16);
+	encryptedData += 16;
+	encryptedSize -= 16;
+
+	// Générer la clé avec le même sel
+	if (!GenerateAESKey(pwd, hProv, hKey, salt)) {
+		return false;
+	}
+
+	// Déchiffrer les données
+	decryptedSize = encryptedSize;
+	decryptedData = new BYTE[decryptedSize];
+	memcpy(decryptedData, encryptedData, encryptedSize);
+
+	if (!CryptDecrypt(hKey, 0, TRUE, 0, decryptedData, &decryptedSize)) {
+		return false;
+	}
+
+	CryptDestroyKey(hKey);
+	CryptReleaseContext(hProv, 0);
+	return true;
 }
 
-//---------------------------------------------------------------------------
-// Generateur de clé AES
-//---------------------------------------------------------------------------
-// Retourne une clé AES et la longueur de la clé
-BYTE* __fastcall XAESCrypt::RandomAesIVKey(DWORD* keySize) {
-//	const DWORD AES_KEY_SIZE = 32;
-//	const DWORD AES_IV_SIZE  = 16;
-//	const DWORD TOTAL_SIZE   = AES_KEY_SIZE + AES_IV_SIZE;
-//
-//	// Allouer la mémoire pour la clé et l'IV
-//	BYTE* key = new BYTE[TOTAL_SIZE];
-//	if (!key) return NULL;
-//
-//	// Définir la taille de la clé AES (256 bits = 32 octets) et de l'IV (128 bits = 16 octets)
-//	// Générer une clé et un IV aléatoires
-//	if (!CryptGenRandom(hProv, TOTAL_SIZE, key)) { delete[] key; return NULL; }
-//
-//	// Définir la taille totale
-//	if (keySize) *keySize = TOTAL_SIZE;
-//
-//	return key;
-}
 
-
-
+*/
